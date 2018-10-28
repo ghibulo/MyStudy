@@ -1,0 +1,18 @@
+== MyStudy - tool for help to learn new facts inspired by the famous RE-WISE method
+
+- only engine for command line for now
+- TODO: interface for android
+
+=== Sources
+
+- MyStudy.kt                ... main test procedure which picks out a few words with the worst rating. TODO: improve control
+- WordsCollection.kt        ... library for collect data, import/export into/from csv datafile, easy txt-format for manual fill the database
+- slovicka.txt, data.csv    ... test data
+
+=== Compile
+
+Program is created in Kotlin, for compile into jar use:
+
+ .................
+$ kotlinc  MyStudy.kt -include-runtime studywords/WordsCollection.kt -d MyStudy.jar
+.................
