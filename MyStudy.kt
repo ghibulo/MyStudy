@@ -9,6 +9,27 @@ object Global {
     const val DEBUG: Boolean = false
 }
 
+data class Parameters (val csvFile: String, val importFile: String? )
+
+
+fun getParameters(args: Array<String>): Parameters {
+    var csvFile: String = "data.csv"
+    var importFile: String? = null
+    if (args.size == 0) return Parameters(csvFile, importFile)
+
+    for (index in 0 until args.size step 2) {
+        if (args[index].equals("-csv")) {
+            csvFile = args[index+1]
+            continue
+        }
+        if (args[index].equals("-imp")) {
+            importFile = args[index+1]
+            continue
+        }
+        
+    }
+    return Parameters(csvFile, importFile)
+}
 
 
 fun getFileListLines(fileName: String): MutableList<String>  {
@@ -17,15 +38,20 @@ fun getFileListLines(fileName: String): MutableList<String>  {
     return result
 }
 
-fun showQuestion(which: Word):Int {
+fun showQuestion(which: Word):Int? {
     println (which.question)
     readLine()
     println (which.answer)
     println (which.pronunciation)
     var answerRating: Int? = null
+    var inputString: String?
     while (answerRating == null) {
         try {
-            answerRating = readLine()?.toInt()
+            inputString = readLine()
+            if (inputString.equals("---")) {
+                return null
+            }
+            answerRating = inputString!!.toInt()
         } catch (e: Exception ) {
             println ("Sory, try to input rating in Int form 1-> easy, 5->wrong")
             answerRating = null
@@ -39,8 +65,9 @@ fun showQuestion(which: Word):Int {
 
 
 
+
+
 fun main(args: Array<String>) {
-    println("Hello, World!")
     /*
     val a: WordsCollection = WordsCollection()
     a.add(Word("ahoj", "hello", "helou",2,10))
@@ -53,20 +80,29 @@ fun main(args: Array<String>) {
     w.futureTimeStamp +=45
     a.showAll()
 */
+    val parameters: Parameters = getParameters(args)
 
-    val a: WordsCollection = WordsCollection()
-    a.loadFromCsv("data.csv")
-    a.showAll()
-
-    for (i in 0..5) {
-        var test: Word = a.getWord()
-        a.evaluateWord(test, showQuestion(test))
-        a.showAll()
+    val words: WordsCollection = WordsCollection()
+    words.loadFromCsv(parameters.csvFile)
+    if (parameters.importFile != null) {
+        words.importFileListWords(parameters.importFile)
     }
-    a.saveIntoCsv("data.csv")
+    words.showAll()
 
+    //a.saveIntoCsv("data3.csv")
+    while(true) {
+        var test: Word = words.getWord()
+        val newRating: Int? = showQuestion(test)
+        if (newRating == null) {
+            break
+        }
+        words.evaluateWord(test,  newRating)
+        //a.showAll()
+    }
+    words.saveIntoCsv(parameters.csvFile)
 
     /*
+
     val myList =  getFileListLines("slovicka.txt")
     myList.forEachIndexed { i, line -> println("${i}: " + line) }
     val myWords =  getFileListWords("slovicka.txt")

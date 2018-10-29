@@ -58,14 +58,29 @@ class WordsCollection {
     fun evaluateWord(which: Word, nextRating: Int) {
 
         val nowStamp: Long = Instant.now().getEpochSecond()
+        println ("nowStamp = ${nowStamp}")
+        println ("which... ${which}")
+        println ("which.timeStamp... ${which.timeStamp}")
+        println ("type of wtimestamp... ${which.timeStamp is Long}")
         val duration: Long = if (nowStamp>which.futureTimeStamp)  (nowStamp - which.timeStamp) else (which.futureTimeStamp - which.timeStamp)
-        which.rating = nextRating
 
-        if (which.timeStamp.equals(0)) {
+        println ("duration = ${duration}")
+        which.rating = nextRating
+        println ("which.rating = ${which.rating}")
+
+        if (which.timeStamp.equals(0L)) {
+
+            println ("which.timeStamp equals 0, so it's set to ${nowStamp}")
             which.timeStamp =  nowStamp
             which.futureTimeStamp = which.timeStamp + ratingStartTime[nextRating-1]
+
+            println ("which.futureTimeStamp set to ${which.futureTimeStamp}")
         } else {
+
+            println ("which.timeStamp is not 0, so it's set to ${nowStamp}")
             which.timeStamp = nowStamp
+
+            println ("duration is multiply by coef ${ratingTimeExtension[nextRating-1]}")
             which.futureTimeStamp = (nowStamp + duration*ratingTimeExtension[nextRating-1]).toLong()
         }
     }
@@ -118,7 +133,8 @@ class WordsCollection {
         File(fileName).useLines {lines -> 
                                     lines.forEach { line ->
                                                         val item: List<String> = line.split("\",\"")
-                                                        if (item.size != 5) {println ("error during read csv - not 5 items!")}
+                                                        println (item)
+                                                        if (item.size != 6) {println ("error during read csv - not 5 items!")}
                                                         data.add(Word(item[0].drop(1), item[1], item[2], 
                                                         item[3].toInt(), item[4].toLong(), item[5].dropLast(1).toLong()))
                                     }
