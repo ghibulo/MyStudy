@@ -48,10 +48,11 @@ fun showQuestion(which: Word):Int? {
     while (answerRating == null) {
         try {
             inputString = readLine()
-            if (inputString.equals("---")) {
+            if (inputString.equals("---")||inputString.equals("===")) {
                 return null
             }
             answerRating = inputString!!.toInt()
+            if ((answerRating < 1) || (answerRating > 5)) answerRating = null
         } catch (e: Exception ) {
             println ("Sory, try to input rating in Int form 1-> easy, 5->wrong")
             answerRating = null
@@ -87,7 +88,7 @@ fun main(args: Array<String>) {
     if (parameters.importFile != null) {
         words.importFileListWords(parameters.importFile)
     }
-    words.showAll()
+    //words.showAll()
 
     //a.saveIntoCsv("data3.csv")
     while(true) {

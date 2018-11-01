@@ -27,6 +27,8 @@ class WordsCollection {
     val ratingStartTime: LongArray = longArrayOf(5*24*3600, 3*24*3600, 24*3600, 12*3600, 4*3600)
     //number of seconds after which the same word can be used
     val minDuration: Int = 2*60
+    val maxNewRepeatedWords = 10
+    var newRepeatedWords = 0
 
 
     class BufferItems {
@@ -58,29 +60,28 @@ class WordsCollection {
     fun evaluateWord(which: Word, nextRating: Int) {
 
         val nowStamp: Long = Instant.now().getEpochSecond()
-        println ("nowStamp = ${nowStamp}")
-        println ("which... ${which}")
-        println ("which.timeStamp... ${which.timeStamp}")
-        println ("type of wtimestamp... ${which.timeStamp is Long}")
+        //println ("nowStamp = ${nowStamp}")
+        //println ("which... ${which}")
+        //println ("which.timeStamp... ${which.timeStamp}")
         val duration: Long = if (nowStamp>which.futureTimeStamp)  (nowStamp - which.timeStamp) else (which.futureTimeStamp - which.timeStamp)
 
-        println ("duration = ${duration}")
+        //println ("duration = ${duration}")
         which.rating = nextRating
-        println ("which.rating = ${which.rating}")
+        //println ("which.rating = ${which.rating}")
 
         if (which.timeStamp.equals(0L)) {
 
-            println ("which.timeStamp equals 0, so it's set to ${nowStamp}")
+            //println ("which.timeStamp equals 0, so it's set to ${nowStamp}")
             which.timeStamp =  nowStamp
             which.futureTimeStamp = which.timeStamp + ratingStartTime[nextRating-1]
 
-            println ("which.futureTimeStamp set to ${which.futureTimeStamp}")
+            //println ("which.futureTimeStamp set to ${which.futureTimeStamp}")
         } else {
 
-            println ("which.timeStamp is not 0, so it's set to ${nowStamp}")
+            //println ("which.timeStamp is not 0, so it's set to ${nowStamp}")
             which.timeStamp = nowStamp
 
-            println ("duration is multiply by coef ${ratingTimeExtension[nextRating-1]}")
+            //println ("duration is multiply by coef ${ratingTimeExtension[nextRating-1]}")
             which.futureTimeStamp = (nowStamp + duration*ratingTimeExtension[nextRating-1]).toLong()
         }
     }
@@ -103,10 +104,13 @@ class WordsCollection {
         val nowStamp: Long = Instant.now().getEpochSecond()
         var i:Int = 0
         while (i < data.size) {
+            if ( (newRepeatedWords > maxNewRepeatedWords) && (data[i].timeStamp.equals(0L)) ) {i++;continue}
             if ((nowStamp - data[i].timeStamp) > minDuration) break
             i++
         }
+        println ("We test the ${i}.word from the end")
         if (data.size <= i) i = data.size-1
+        if (data[i].timeStamp.equals(0L)) newRepeatedWords++
         return data[i]
     }
 
@@ -133,7 +137,7 @@ class WordsCollection {
         File(fileName).useLines {lines -> 
                                     lines.forEach { line ->
                                                         val item: List<String> = line.split("\",\"")
-                                                        println (item)
+                                                        //println (item)
                                                         if (item.size != 6) {println ("error during read csv - not 5 items!")}
                                                         data.add(Word(item[0].drop(1), item[1], item[2], 
                                                         item[3].toInt(), item[4].toLong(), item[5].dropLast(1).toLong()))
