@@ -38,7 +38,7 @@ fun getFileListLines(fileName: String): MutableList<String>  {
     return result
 }
 
-fun showQuestion(which: Word):Int? {
+fun showQuestion(which: Word, leftRating: Int = 1, rightRating: Int = 5):Int? {
     println (which.question)
     readLine()
     println (which.answer)
@@ -52,9 +52,13 @@ fun showQuestion(which: Word):Int? {
                 return null
             }
             answerRating = inputString!!.toInt()
-            if ((answerRating < 1) || (answerRating > 5)) answerRating = null
+            if ((answerRating < leftRating) || (answerRating > rightRating)) answerRating = null
         } catch (e: Exception ) {
-            println ("Sory, try to input rating in Int form 1-> easy, 5->wrong")
+            if (leftRating == 1) {
+                println ("Sory, try to input rating in Int form 1-> easy, 5->wrong")
+            } else {
+                println ("Sory, try to input rating in Int form 1-> easy, 5->wrong or 0->remove")
+            }
             answerRating = null
         }
     }
@@ -69,52 +73,33 @@ fun showQuestion(which: Word):Int? {
 
 
 fun main(args: Array<String>) {
-    /*
-    val a: WordsCollection = WordsCollection()
-    a.add(Word("ahoj", "hello", "helou",2,10))
-    a.add(Word("stůl", "table", "tejbl",2,20))
-    a.showAll()
-    a.importFileListWords("slovicka.txt")
-    a.showAll()
-    var w: Word = a.getAtIndex(8)
-    println (w)
-    w.futureTimeStamp +=45
-    a.showAll()
-*/
     val parameters: Parameters = getParameters(args)
 
-    val words: WordsCollection = WordsCollection()
-    words.loadFromCsv(parameters.csvFile)
-    if (parameters.importFile != null) {
-        words.importFileListWords(parameters.importFile)
-    }
-    //words.showAll()
+    val words: WordsCollection = WordsCollection(parameters.csvFile, parameters.importFile)
 
-    //a.saveIntoCsv("data3.csv")
     while(true) {
-        var test: Word = words.getWord()
+        var test: Word = words.getWord()!!
         val newRating: Int? = showQuestion(test)
         if (newRating == null) {
             break
         }
         words.evaluateWord(test,  newRating)
-        //a.showAll()
+    }
+    //rewise of words with rating > 3
+    while(true) {
+        var test: Word? = words.trainWords.getWord()
+        if (test == null) break
+        val newRating: Int? = showQuestion(test, leftRating = 0) //0 -> removing from training
+        if (newRating == null) {
+            break
+        }
+        if (newRating == 0) {
+            words.trainWords.deleteCurrentWord()
+        } else {
+            words.trainWords.evaluateWord(test,  newRating)
+        }
     }
     words.saveIntoCsv(parameters.csvFile)
 
-    /*
-
-    val myList =  getFileListLines("slovicka.txt")
-    myList.forEachIndexed { i, line -> println("${i}: " + line) }
-    val myWords =  getFileListWords("slovicka.txt")
-    myWords.forEachIndexed { i, line -> println("${i}: " + line) }
-    println ("export...")
-    saveIntoCsv("data.csv", myWords)
-    var loadedList = loadFromCsv("data.csv")
-    loadedList.forEachIndexed { i, line -> println("${i}: " + line) }
-    loadedList[0] =  showQuestion(loadedList[0])
-    loadedList[1] =  showQuestion(loadedList[1])
-    saveIntoCsv("data2.csv", loadedList)
-    */
 
 }

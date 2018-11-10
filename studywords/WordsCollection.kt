@@ -17,9 +17,12 @@ data class Word (var question: String = "",
         else -> 0
 	}
 
+
+
 }
 
-class WordsCollection {
+
+open class TrainWordsCollection {
 
     var data: MutableList<Word> = mutableListOf<Word>()
 
@@ -27,37 +30,25 @@ class WordsCollection {
     val ratingStartTime: LongArray = longArrayOf(5*24*3600, 3*24*3600, 24*3600, 12*3600, 4*3600)
     //number of seconds after which the same word can be used
     val minDuration: Int = 2*60
-    val maxNewRepeatedWords = 10
-    var newRepeatedWords = 0
+    var index : Int = -1
 
 
-    class BufferItems {
-        private var items: Word = Word()
-        private var ind:Int = 0
-        fun saveItem(item: String): Word? {
-            //if (Global.DEBUG) {
-                println ("called saveItem... items = ${items}")
-            //}
-            if (item.substring(0..2) == "---") {
-                val result: Word? = items
-                if (ind>0) {
-                    ind = 0
-                    items = Word()
-                } 
-                return result
-            } else {
-                when (ind++) {
-                    0 -> items.question = item
-                    1 -> items.answer = item
-                    2 -> items.pronunciation = item
-                    else -> print("Error in the data file!")
-                }
-            }
-            return null
-        }//fun
+    fun add(word: Word) {
+        data.add(word)
+        data = data.sorted().toMutableList()
     }
 
-    fun evaluateWord(which: Word, nextRating: Int) {
+    fun showAll() {
+        data = data.sorted().toMutableList()
+        data.forEachIndexed { i, line -> println("${i}: " + line) }
+    }
+
+    fun getAtIndex(i: Int): Word {
+        return data[i]
+    }
+
+
+    open fun evaluateWord(which: Word, nextRating: Int) {
 
         val nowStamp: Long = Instant.now().getEpochSecond()
         //println ("nowStamp = ${nowStamp}")
@@ -86,6 +77,63 @@ class WordsCollection {
         }
     }
 
+    //simple go through all the items
+    open fun getWord(): Word? {
+        if (data.lastIndex == -1) return null
+        if (++index > data.lastIndex) index = 0
+        if (index == 0) data = data.sorted().toMutableList()
+        return data[index]
+    }
+
+    fun deleteCurrentWord() {
+        if ((data.lastIndex >= index) && (index >=0)) {
+            data.removeAt(index)
+        }
+    }
+
+}
+
+
+class WordsCollection(val csvFile: String, val importFile: String? = null) : TrainWordsCollection() {
+
+    val maxNewRepeatedWords = 10
+    var newRepeatedWords = 0
+    var trainWords : TrainWordsCollection = TrainWordsCollection() 
+
+    init {
+        loadFromCsv(csvFile)
+        if (importFile != null) {
+            importFileListWords(importFile)
+        }
+    }
+
+    class BufferItems {
+        private var items: Word = Word()
+        private var ind:Int = 0
+        fun saveItem(item: String): Word? {
+            //if (Global.DEBUG) {
+                println ("called saveItem... items = ${items}")
+            //}
+            if (item.substring(0..2) == "---") {
+                val result: Word? = items
+                if (ind>0) {
+                    ind = 0
+                    items = Word()
+                } 
+                return result
+            } else {
+                when (ind++) {
+                    0 -> items.question = item
+                    1 -> items.answer = item
+                    2 -> items.pronunciation = item
+                    else -> print("Error in the data file!")
+                }
+            }
+            return null
+        }//fun
+    }
+
+
 
 
     fun importFileListWords(fileName: String)  {
@@ -99,7 +147,7 @@ class WordsCollection {
         data = data.sorted().toMutableList()
     }
 
-    fun getWord(): Word {
+    override fun getWord(): Word? {
         data = data.sorted().toMutableList()
         val nowStamp: Long = Instant.now().getEpochSecond()
         var i:Int = 0
@@ -115,20 +163,14 @@ class WordsCollection {
     }
 
 
-
-    fun add(word: Word) {
-        data.add(word)
-        data = data.sorted().toMutableList()
+    override fun evaluateWord(which: Word, nextRating: Int) {
+        super.evaluateWord(which, nextRating)
+        if (nextRating > 3) {
+            trainWords.data.add(which.copy())
+        }
     }
 
-    fun showAll() {
-        data = data.sorted().toMutableList()
-        data.forEachIndexed { i, line -> println("${i}: " + line) }
-    }
 
-    fun getAtIndex(i: Int): Word {
-        return data[i]
-    }
 
     fun loadFromCsv(fileName: String ) {
 
